@@ -28,7 +28,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 _REGISTER_FIELDS = {
     "name", "unique_id", "register_type", "address", "count", "scale", "offset",
     "unit_of_measurement", "device_class", "state_class", "signed", "word_order",
-    "options", "mask", "icon", "enabled_default", "precision",
+    "options", "mask", "icon", "enabled_default", "precision", "compute", "sources",
 }
 
 
@@ -41,6 +41,9 @@ def _auto_inject_readbacks(sensors: list[dict], controls: list[dict]) -> tuple[l
     """Give every writable control a hidden holding sensor to read its state back."""
     for s in sensors:
         s["unique_id"] = _ensure_uid(s.get("unique_id"), "s", int(s.get("address", 0)))
+        if s.get("sources"):
+            s.setdefault("compute", "sum")
+            s["register_type"] = "computed"
     sensor_uids = {s["unique_id"] for s in sensors}
     for c in controls:
         addr = c.get("address", c.get("base_address", 0))

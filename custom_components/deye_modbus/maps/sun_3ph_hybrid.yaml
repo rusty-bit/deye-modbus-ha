@@ -158,6 +158,17 @@ sensors:
     state_class: measurement
     enabled_default: false
 
+  # Total PV power: the 3-phase protocol has no single register for this, so it
+  # is the sum of the four MPPT power registers (computed, not read).
+  - name: PV Power
+    unique_id: pv_power
+    compute: sum
+    sources: [pv1_power, pv2_power, pv3_power, pv4_power]
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    icon: mdi:solar-power
+
   # ---------------------------------------------------------------- battery
   - name: Battery SOC
     unique_id: battery_soc
