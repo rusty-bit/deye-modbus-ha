@@ -1,6 +1,6 @@
 {
   "domain": "deye_modbus",
-  "name": "Deye Modbus (Hybrid Inverter)",
+  "name": "Deye Modbus (Hybrid Inverter) - personal fork",
   "codeowners": [
     "@Developer089"
   ],
@@ -16,5 +16,5 @@
   "requirements": [
     "pymodbus>=3.5.0"
   ],
-  "version": "0.1.1"
+  "version": "0.1.3"
 }

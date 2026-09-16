@@ -1,5 +1,12 @@
 # Deye Modbus for Home Assistant
 
+> **Personal fork** of [Developer089/deye-modbus-ha](https://github.com/Developer089/deye-modbus-ha).
+> Changes: settings writes fixed (FC16 instead of FC06, pymodbus 3.10+ unit id),
+> write errors shown in HA, and a total **PV Power** sensor. See `CHANGELOG.md`.
+> The integration domain is still `deye_modbus`, so existing entity IDs are kept.
+> Remove the upstream HACS install before using this one.
+
+
 Local Home Assistant integration for **Deye three-phase hybrid inverters** (SUN-\*K-SG04LP3 / SG05LP3 family, including the SUN-12K-SG05LP3). It talks Modbus TCP directly to the inverter's WiFi/LAN logger or an RS485-to-TCP gateway — no cloud, no SolarMAN account required.
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
