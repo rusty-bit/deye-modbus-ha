@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -75,8 +76,8 @@ class DeyeModbusSwitch(CoordinatorEntity[dict[str, Any]], SwitchEntity):
             ok = await self._coordinator.write_coil(self._address, value)
         else:
             ok = await self._coordinator.write_single_register(self._address, value)
-        if ok:
-            await self._coordinator.async_request_refresh()
+        if not ok:
+            raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {value}")
         return ok
 
     def _sync_from_sensor(self) -> None:

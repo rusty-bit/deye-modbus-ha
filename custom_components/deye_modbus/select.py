@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -75,10 +76,10 @@ class DeyeModbusSelect(CoordinatorEntity[dict[str, Any]], SelectEntity):
         if option not in self._value_by_label:
             return
         ok = await self._coordinator.write_single_register(self._address, self._value_by_label[option])
-        if ok:
-            self._current_option = option
-            self.async_write_ha_state()
-            await self._coordinator.async_request_refresh()
+        if not ok:
+            raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {option}")
+        self._current_option = option
+        self.async_write_ha_state()
 
     def _sync_from_sensor(self) -> None:
         if not self._read_uid:
@@ -151,14 +152,14 @@ class DeyeModbusSelect32(CoordinatorEntity[dict[str, Any]], SelectEntity):
             return
         old = self._get_u32()
         if old is None:
-            return
+            raise HomeAssistantError(f"Current value of {self.name} unknown - cannot write")
         field_val = self._value_by_label[option] & (self._mask >> self._shift)
         new = (old & (~self._mask)) | ((field_val << self._shift) & self._mask)
         ok = await self._coordinator.write_u32(self._base, new, self._order)
-        if ok:
-            self._recompute_option_from_u32(new)
-            self.async_write_ha_state()
-            await self._coordinator.async_request_refresh()
+        if not ok:
+            raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {option}")
+        self._recompute_option_from_u32(new)
+        self.async_write_ha_state()
 
     def _sync_from_sensor(self) -> None:
         v = self._get_u32()

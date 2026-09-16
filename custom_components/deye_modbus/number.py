@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -62,11 +63,11 @@ class DeyeModbusNumber(CoordinatorEntity[dict[str, Any]], NumberEntity):
         self._signed = bool(cfg.get("signed", False))
         self._read_uid: Optional[str] = cfg.get("read_unique_id")
         self._read_factor = float(cfg.get("read_factor", 1.0))
-        self._value: float = max(self._attr_native_min_value, min(self._attr_native_max_value, 0.0))
+        self._value: float | None = None
         self._sync_from_sensor()
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         return self._value
 
     async def async_set_native_value(self, value: float) -> None:
@@ -77,10 +78,10 @@ class DeyeModbusNumber(CoordinatorEntity[dict[str, Any]], NumberEntity):
         if self._signed and raw < 0:
             raw &= 0xFFFF
         ok = await self._coordinator.write_single_register(self._address, raw)
-        if ok:
-            self._value = v
-            self.async_write_ha_state()
-            await self._coordinator.async_request_refresh()
+        if not ok:
+            raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {v}")
+        self._value = v
+        self.async_write_ha_state()
 
     def _sync_from_sensor(self) -> None:
         if not self._read_uid:
@@ -131,7 +132,14 @@ class DeyeModbusNumber32(CoordinatorEntity[dict[str, Any]], NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         v = int(max(self._attr_native_min_value, min(self._attr_native_max_value, round(value))))
         ok = await self._coordinator.write_u32(self._base, v, self._order)
-        if ok:
-            self._value = float(v)
-            self.async_write_ha_state()
-            await self._coordinator.async_request_refresh()
+        if not ok:
+            raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {v}")
+        self._value = float(v)
+        self.async_write_ha_state()
+
+    def _handle_coordinator_update(self) -> None:
+        rb = self._cfg.get("read_unique_id")
+        raw = (self.coordinator.data or {}).get(rb) if rb else None
+        if raw is not None:
+            self._value = float(raw)
+        self.async_write_ha_state()
