@@ -1,10 +1,32 @@
 # Deye Modbus for Home Assistant
 
-> **Personal fork** of [Developer089/deye-modbus-ha](https://github.com/Developer089/deye-modbus-ha).
-> Changes: settings writes fixed (FC16 instead of FC06, pymodbus 3.10+ unit id),
-> write errors shown in HA, and a total **PV Power** sensor. See `CHANGELOG.md`.
-> The integration domain is still `deye_modbus`, so existing entity IDs are kept.
-> Remove the upstream HACS install before using this one.
+> **Personal fork** of [Developer089/deye-modbus-ha](https://github.com/Developer089/deye-modbus-ha),
+> maintained at [rusty-bit/deye-modbus-ha](https://github.com/rusty-bit/deye-modbus-ha).
+> The integration domain is still `deye_modbus`, so existing entity IDs are kept —
+> **remove the upstream HACS installation before using this one.**
+
+## What this fork changes
+
+Upstream is at 0.1.1; this fork is at 0.1.4. Everything below is in addition to upstream.
+
+**Fixes**
+
+| Fix | Why it mattered |
+|-----|-----------------|
+| All writes use **FC16** instead of FC06 | Deye hybrids reject FC06, so *no* setting could be changed: battery currents, SOC limits, work mode, switches and TOU silently did nothing. |
+| Correct **pymodbus unit id** (`device_id=` on 3.10+, `slave=` before) | On current Home Assistant releases every read and write went out with the wrong unit id. |
+| **Write errors surface in HA** and are logged | A rejected write used to fail silently, leaving the UI showing a value the inverter never accepted. |
+| Writes share the polling lock; a written value is held for 30 s | A poll landing mid-write no longer flips the control back to the old value. |
+| **Address offset** no longer applied twice on reads; RTU-over-TCP client fixed | Gateways with a shifted map read the wrong registers. |
+
+**New**
+
+- **PV Power** sensor — PV1 + PV2 + PV3 + PV4 (the three-phase protocol has no single register for it).
+- **Advanced settings** from the SolarMAN app (SmartLoad Setting / Advanced Function-1): SmartLoad Setup, GEN Connect To Grid Input, ARC Fault Detection, Gen/Grid Peak Shaving and their power limits, Asymmetric Phase Feeding — plus read-only Parallel, Equipment Mode, Parallel Modbus SN, DRM, Backup Delay, AC Couple Setup, MPPT Scan, Grid Check Source, Meter Select and CT Ratio.
+- Register maps support `compute: sum` with `sources:` (derived sensors) and `mask:` bit fields on switches/selects, written with a read-modify-write inside the lock so flags packed into one register cannot clobber each other.
+- `tests/sim_inverter_test.py` — runs the coordinator against a simulated Deye (one that rejects FC06) with no Home Assistant needed.
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the per-version list.
 
 
 Local Home Assistant integration for **Deye three-phase hybrid inverters** (SUN-\*K-SG04LP3 / SG05LP3 family, including the SUN-12K-SG05LP3). It talks Modbus TCP directly to the inverter's WiFi/LAN logger or an RS485-to-TCP gateway — no cloud, no SolarMAN account required.
@@ -36,7 +58,7 @@ Local Home Assistant integration for **Deye three-phase hybrid inverters** (SUN-
 
 1. In Home Assistant go to **HACS**.
 2. Open the top-right menu **⋮ → Custom repositories**.
-3. Add the repository URL `https://github.com/Developer089/deye-modbus-ha` and choose category **Integration**.
+3. Add the repository URL `https://github.com/rusty-bit/deye-modbus-ha` and choose category **Integration**.
 4. Find **Deye Modbus (Hybrid Inverter)** in the list and click **Download / Install**.
 5. **Restart Home Assistant.**
 6. Go to **Settings ▸ Devices & Services ▸ Add Integration** and search for **Deye Modbus**.
@@ -193,7 +215,7 @@ The control and service entities **write settings to your inverter**. Changing w
 ### Instalace přes HACS
 
 1. V **HACS** otevřete menu **⋮ → Custom repositories** (Vlastní repozitáře).
-2. Přidejte adresu `https://github.com/Developer089/deye-modbus-ha` a jako kategorii zvolte **Integration**.
+2. Přidejte adresu `https://github.com/rusty-bit/deye-modbus-ha` a jako kategorii zvolte **Integration**.
 3. Najděte **Deye Modbus (Hybrid Inverter)** a nainstalujte.
 4. **Restartujte Home Assistant.**
 5. Přejděte do **Nastavení ▸ Zařízení a služby ▸ Přidat integraci** a vyhledejte **Deye Modbus**.
