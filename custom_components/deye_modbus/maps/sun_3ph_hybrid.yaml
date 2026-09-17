@@ -787,6 +787,98 @@ sensors:
     state_class: total_increasing
 
 
+  # ---------------------------------------------------------------- advanced settings (read-only)
+  # Installer settings shown under "Advanced Function" in the SolarMAN app.
+  # Exposed read-only on purpose: a wrong value here can cut Modbus
+  # communication (Modbus SN / parallel role), break zero-export metering
+  # (CT ratio / meter), or is marked "engineer only" in the protocol.
+  # Source: Deye MODBUS RTU three-phase protocol V105.1 (2023-10-06).
+  - name: Parallel
+    unique_id: adv_parallel
+    register_type: holding
+    address: 336
+    mask: 0x0001
+    options: {0: Disable, 1: Enable}
+    icon: mdi:link-variant
+    enabled_default: false
+
+  - name: Equipment Mode
+    unique_id: adv_equipment_mode
+    register_type: holding
+    address: 336
+    mask: 0x0002
+    options: {0: Slave, 1: Master}
+    icon: mdi:account-supervisor
+    enabled_default: false
+
+  - name: Parallel Modbus SN
+    unique_id: adv_modbus_sn
+    register_type: holding
+    address: 336
+    mask: 0xFC00
+    icon: mdi:numeric
+    enabled_default: false
+
+  - name: DRM
+    unique_id: adv_drm
+    register_type: holding
+    address: 178
+    mask: 0x3000
+    options: {2: Disable, 3: Enable}
+    icon: mdi:shield-check
+    enabled_default: false
+
+  - name: Backup Delay
+    unique_id: adv_backup_delay
+    register_type: holding
+    address: 209
+    unit_of_measurement: s
+    icon: mdi:timer-outline
+    enabled_default: false
+
+  - name: CT Ratio
+    unique_id: adv_ct_ratio
+    register_type: holding
+    address: 347
+    icon: mdi:current-ac
+    enabled_default: false
+
+  - name: Grid Check Source
+    unique_id: adv_grid_check_source
+    register_type: holding
+    address: 344
+    mask: 0x0001
+    options: {0: CT, 1: Meter}
+    icon: mdi:meter-electric
+    enabled_default: false
+
+  - name: Meter Select
+    unique_id: adv_meter_select
+    register_type: holding
+    address: 345
+    options: {0: None, 1: Eastron, 2: CHNT}
+    icon: mdi:meter-electric-outline
+    enabled_default: false
+
+  - name: MPPT Scan
+    unique_id: adv_mppt_scan
+    register_type: holding
+    address: 341
+    mask: 0x0004
+    options: {0: Disable, 1: Enable}
+    icon: mdi:solar-panel
+    enabled_default: false
+
+  # Protocol V105 only documents 0 = disable / 1 = enable; newer firmware
+  # stores the coupling side, so other values are shown as the raw number.
+  - name: AC Couple Setup
+    unique_id: adv_ac_couple
+    register_type: holding
+    address: 234
+    options: {0: Disable}
+    icon: mdi:transmission-tower
+    enabled_default: false
+
 # =====================================================================
 # Writable controls (holding registers 60-499, written with FC06/FC16).
 # Each control gets a hidden read-back sensor injected automatically so the
@@ -1367,3 +1459,101 @@ controls:
         value: 2
       - label: Grid + Generator
         value: 3
+
+  # ------------------------------------------------------------- advanced functions
+  # SolarMAN app: SmartLoad Setting / Advanced Function-1.
+  # Source: Deye MODBUS RTU three-phase protocol V105.1, cross-checked against
+  # the ha-solarman (deye_p3) and kellerza/sunsynk three-phase definitions.
+  - type: select
+    name: SmartLoad Setup
+    unique_id: smartload_setup
+    register_type: holding
+    address: 133
+    icon: mdi:lightning-bolt-circle
+    entity_category: config
+    options:
+      - label: Generator Input
+        value: 0
+      - label: SmartLoad Output
+        value: 1
+      - label: Micro Inverter Input
+        value: 2
+
+  - type: switch
+    name: GEN Connect To Grid Input
+    unique_id: gen_to_grid_input
+    register_type: holding
+    address: 189
+    on_value: 1
+    off_value: 0
+    icon: mdi:generator-stationary
+    entity_category: config
+
+  - type: switch
+    name: ARC Fault Detection
+    unique_id: arc_fault_mode
+    register_type: holding
+    address: 181
+    on_value: 1
+    off_value: 0
+    icon: mdi:flash-alert
+    entity_category: config
+
+  # Register 178 packs 2-bit flags: 10 = disable, 11 = enable (00/01 = no change).
+  - type: switch
+    name: Gen Peak Shaving
+    unique_id: gen_peak_shaving
+    register_type: holding
+    address: 178
+    mask: 0x000C
+    on_value: 3
+    off_value: 2
+    icon: mdi:generator-stationary
+    entity_category: config
+
+  - type: number
+    name: Gen Peak Shaving Power
+    unique_id: gen_peak_shaving_power
+    register_type: holding
+    address: 190
+    min: 0
+    max: 16000
+    step: 100
+    unit_of_measurement: W
+    mode: box
+    write_factor: 1
+    entity_category: config
+
+  - type: switch
+    name: Grid Peak Shaving
+    unique_id: grid_peak_shaving
+    register_type: holding
+    address: 178
+    mask: 0x0030
+    on_value: 3
+    off_value: 2
+    icon: mdi:transmission-tower
+    entity_category: config
+
+  - type: number
+    name: Grid Peak Shaving Power
+    unique_id: grid_peak_shaving_power
+    register_type: holding
+    address: 191
+    min: 0
+    max: 16000
+    step: 100
+    unit_of_measurement: W
+    mode: box
+    write_factor: 1
+    entity_category: config
+
+  - type: switch
+    name: Asymmetric Phase Feeding
+    unique_id: asymmetric_phase_feeding
+    register_type: holding
+    address: 237
+    on_value: 1
+    off_value: 0
+    icon: mdi:sine-wave
+    entity_category: config

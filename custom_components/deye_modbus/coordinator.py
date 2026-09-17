@@ -57,6 +57,18 @@ def _unit_kw(method) -> str | None:
     return None
 
 
+def parse_mask(value: Any) -> int | None:
+    """Accept a mask given as int or as a string such as "0x30" / "0b1100"."""
+    if value is None:
+        return None
+    return int(str(value), 0) & 0xFFFFFFFF
+
+
+def mask_shift(mask: int) -> int:
+    """Bit position of the lowest set bit, used to align a field with its mask."""
+    return (mask & -mask).bit_length() - 1 if mask else 0
+
+
 @dataclass
 class RegisterDef:
     """One decoded value read from the inverter."""
@@ -74,7 +86,7 @@ class RegisterDef:
     signed: bool = False
     word_order: str = "high_low"             # 32-bit word order: high_low | low_high
     options: dict[int, str] | None = None    # enum mapping for sensors (0 -> "text")
-    mask: int | None = None                  # bitmask applied to raw before sign/scale
+    mask: int | str | None = None            # bit field: (raw & mask) >> lowest mask bit
     icon: str | None = None
     enabled_default: bool = True             # entity_registry_enabled_default
     precision: int | None = None             # suggested_display_precision (decimals)
@@ -112,6 +124,8 @@ class DeyeModbusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._polled = [r for r in registers if not r.compute]
         # address -> (raw word, expiry) for values we just wrote
         self._pending: dict[int, tuple[int, float]] = {}
+        for r in registers:
+            r.mask = parse_mask(r.mask)
 
     def _addr(self, addr: int) -> int:
         return int(addr) - self._addr_off if self._addr_off else int(addr)
@@ -222,7 +236,7 @@ class DeyeModbusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if r.count == 1:
             v = chunk[0]
             if r.mask is not None:
-                v &= r.mask
+                v = (v & r.mask) >> mask_shift(r.mask)
             if r.signed and v >= 0x8000:
                 v -= 0x10000
             return (v - r.offset) * r.scale
@@ -233,7 +247,7 @@ class DeyeModbusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 high, low = chunk[0], chunk[1]
             v = (high << 16) | low
             if r.mask is not None:
-                v &= r.mask
+                v = (v & r.mask) >> mask_shift(r.mask)
             if r.signed and v >= 0x80000000:
                 v -= 0x100000000
             return (v - r.offset) * r.scale
@@ -262,26 +276,58 @@ class DeyeModbusCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def write_multiple_registers(self, address: int, values: list[int]) -> bool:
         """Write with FC16 - the only write function Deye inverters accept."""
         vals = [int(v) & 0xFFFF for v in values]
-        a = self._addr(address)
+        async with self._lock:
+            ok = await self._write_locked(address, vals)
+        if ok:
+            await self._after_write(address, vals)
+        return ok
+
+    async def write_register_bits(self, address: int, mask: int, value: int) -> bool:
+        """Change only the bits under `mask` in one register, keeping the rest.
+
+        `value` is already shifted into position. The register is read fresh from
+        the inverter inside the lock, so several fields packed into one register
+        (e.g. 178, peak-shaving flags) cannot overwrite each other.
+        """
+        mask &= 0xFFFF
         async with self._lock:
             try:
-                client = await self._ensure_client()
-                method = client.write_registers
-                rr = await method(a, vals, **self._unit_kwargs(method))
+                raw = await self._read_holding(address, 1)
             except Exception as err:  # noqa: BLE001
-                _LOGGER.error("Write %s to register %s failed: %s", vals, address, err)
-                await self._reset_client()
+                raw = None
+                _LOGGER.debug("Read before bit write of %s raised %s", address, err)
+            if not raw:
+                _LOGGER.error("Cannot change bits 0x%04X of register %s: current value unreadable", mask, address)
                 return False
-            if rr is None or (getattr(rr, "isError", None) and rr.isError()):
-                _LOGGER.error("Inverter rejected write %s to register %s: %s", vals, address, rr)
-                return False
-            expiry = time.monotonic() + PENDING_WRITE_SECONDS
-            for i, v in enumerate(vals):
-                self._pending[address + i] = (v, expiry)
+            new = (int(raw[0]) & ~mask & 0xFFFF) | (int(value) & mask)
+            ok = await self._write_locked(address, [new])
+        if ok:
+            await self._after_write(address, [new])
+        return ok
+
+    async def _write_locked(self, address: int, vals: list[int]) -> bool:
+        """FC16 write; caller must hold self._lock."""
+        a = self._addr(address)
+        try:
+            client = await self._ensure_client()
+            method = client.write_registers
+            rr = await method(a, vals, **self._unit_kwargs(method))
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Write %s to register %s failed: %s", vals, address, err)
+            await self._reset_client()
+            return False
+        if rr is None or (getattr(rr, "isError", None) and rr.isError()):
+            _LOGGER.error("Inverter rejected write %s to register %s: %s", vals, address, rr)
+            return False
+        expiry = time.monotonic() + PENDING_WRITE_SECONDS
+        for i, v in enumerate(vals):
+            self._pending[address + i] = (v, expiry)
         _LOGGER.debug("Wrote %s to register %s", vals, address)
+        return True
+
+    async def _after_write(self, address: int, vals: list[int]) -> None:
         self._patch_data(address, vals)
         await self.async_request_refresh()
-        return True
 
     async def write_single_register(self, address: int, value: int) -> bool:
         # Deliberately FC16 with one value, not FC06.

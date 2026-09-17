@@ -33,6 +33,10 @@ from pymodbus.pdu import ExceptionResponse
 class DeyeBlock(ModbusSparseDataBlock): pass
 vals={i:0 for i in range(0,1000)}
 vals.update({108:100,117:20,672:1200,673:850,674:0,675:300,588:55})
+# advanced settings as shown in the SolarMAN app screenshot: all 2-bit flags in
+# 178 "disable" (10), parallel off / slave / Modbus SN 1, MPPT scan on,
+# Eastron meter, CT ratio 2000, peak-shaving powers 8000 W
+vals.update({178:0x20AA,190:8000,191:8000,336:1<<10,341:0x0004,345:1,347:2000})
 block=DeyeBlock(vals)
 dev=ModbusDeviceContext(hr=block)
 ctx=ModbusServerContext(devices={1:dev},single=False)
@@ -63,5 +67,21 @@ async def main():
     print("after refresh rb:",c.data["rb_batt_max_charge_current"],c.data["rb_batt_low_soc"])
     # FC06 directly, to prove emulation rejects it
     cl=await c._ensure_client(); rr=await cl.write_register(108,50,device_id=1); print("raw FC06 isError:",rr.isError())
+    # advanced settings decode (bit fields shifted down)
+    adv={k:d[k] for k in ("adv_parallel","adv_equipment_mode","adv_modbus_sn","adv_drm","adv_mppt_scan","adv_meter_select","adv_ct_ratio")}
+    print("advanced:",adv)
+    assert adv=={"adv_parallel":0,"adv_equipment_mode":0,"adv_modbus_sn":1,"adv_drm":2,"adv_mppt_scan":1,"adv_meter_select":1,"adv_ct_ratio":2000}, adv
+    # enable grid peak-shaving: only bits 4-5 of 178 may change (10 -> 11)
+    ok=await c.write_register_bits(178,0x0030,3<<4)
+    r=await cl.read_holding_registers(178,count=1,device_id=1)
+    print("bit write ok:",ok,"| 178 now 0x%04X" % r.registers[0])
+    assert ok and r.registers[0]==0x20BA, hex(r.registers[0])
+    assert c.data["adv_drm"]==2 and (int(c.data["rb_grid_peak_shaving"]) & 0x30)>>4==3
+    # then gen peak-shaving: grid flag must survive
+    ok=await c.write_register_bits(178,0x000C,3<<2)
+    r=await cl.read_holding_registers(178,count=1,device_id=1)
+    print("second bit write ok:",ok,"| 178 now 0x%04X" % r.registers[0])
+    assert ok and r.registers[0]==0x20BE, hex(r.registers[0])
+    print("ALL CHECKS PASSED")
     await c.async_close(); task.cancel()
 asyncio.run(main())

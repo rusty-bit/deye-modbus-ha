@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import DeyeModbusCoordinator
+from .coordinator import DeyeModbusCoordinator, mask_shift, parse_mask
 from .device_helper import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,6 +50,9 @@ class DeyeModbusSelect(CoordinatorEntity[dict[str, Any]], SelectEntity):
         self._entry = entry
         self._cfg = cfg
         self._address = int(cfg["address"])
+        # Optional bit field: option values are field values, written in place.
+        self._mask = parse_mask(cfg.get("mask"))
+        self._shift = mask_shift(self._mask) if self._mask else 0
         opts = cfg.get("options", [])
         self._labels = [o["label"] for o in opts]
         self._value_by_label = {o["label"]: int(o["value"]) for o in opts}
@@ -75,7 +78,11 @@ class DeyeModbusSelect(CoordinatorEntity[dict[str, Any]], SelectEntity):
     async def async_select_option(self, option: str) -> None:
         if option not in self._value_by_label:
             return
-        ok = await self._coordinator.write_single_register(self._address, self._value_by_label[option])
+        value = self._value_by_label[option]
+        if self._mask:
+            ok = await self._coordinator.write_register_bits(self._address, self._mask, value << self._shift)
+        else:
+            ok = await self._coordinator.write_single_register(self._address, value)
         if not ok:
             raise HomeAssistantError(f"Deye inverter did not accept {self.name} = {option}")
         self._current_option = option
@@ -89,6 +96,8 @@ class DeyeModbusSelect(CoordinatorEntity[dict[str, Any]], SelectEntity):
             return
         try:
             v = int(round(float(raw) / self._read_factor))
+            if self._mask:
+                v = (v & self._mask) >> self._shift
             self._current_option = self._label_by_value.get(v, None)
         except Exception:  # noqa: BLE001
             pass

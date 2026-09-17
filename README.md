@@ -113,6 +113,9 @@ Rebadged units on the same platform (Sunsynk, etc.) will generally work too.
 | Select | Work Mode (Selling First / Zero Export To Load / Zero Export To CT) |
 | Number | Max Sell Power, Max Grid Output Power, Active Power Regulation, Battery Max Charge/Discharge Current, Grid Charge Current, Battery Shutdown/Restart/Low SOC, Battery Capacity, Grid Voltage High/Low limits |
 | Time-of-use | 6 slots × Time / Power / SOC / Charge Source (Off / Grid / Generator / Grid+Generator) |
+| Advanced (fork) | SmartLoad Setup, GEN Connect To Grid Input, ARC Fault Detection, Gen/Grid Peak Shaving + power, Asymmetric Phase Feeding |
+
+**Advanced settings, read-only** (disabled by default): Parallel, Equipment Mode, Parallel Modbus SN, DRM, Backup Delay, AC Couple Setup, MPPT Scan, Grid Check Source, Meter Select, CT Ratio. These are read-only because a wrong value can cut Modbus communication or break zero-export metering; change them in the SolarMAN app.
 
 > **Disabled-by-default entities.** To keep the device tidy, some entities ship disabled: PV3/PV4, per-phase inverter/load detail, generator/backup, grid protection limits, and all time-of-use slots. Enable any of them under the device's **Entities** list → open the entity → **Settings** → toggle *Enabled*.
 
