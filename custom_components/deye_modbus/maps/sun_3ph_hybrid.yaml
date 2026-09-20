@@ -884,6 +884,75 @@ sensors:
 # Each control gets a hidden read-back sensor injected automatically so the
 # entity reflects the inverter's current value.
 # =====================================================================
+  # ----------------------------------------------------- unverified registers
+  # Raw values, read-only, disabled by default. Enable them and compare with
+  # "Export All Configurations" in Deye Cloud before they are made writable.
+  # Expected on this system: CT ratio 2000, Modbus SN 1, backup delay 0,
+  # meter = Eastron, and register 178 with the grid peak-shaving bit set.
+  - name: Raw 178 (peak-shaving / DRM bits)
+    unique_id: raw_178_flags
+    register_type: holding
+    address: 178
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 140 (grid/gen signal)
+    unique_id: raw_140_signal
+    register_type: holding
+    address: 140
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 209 (backup delay?)
+    unique_id: raw_209_backup_delay
+    register_type: holding
+    address: 209
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 224 (meter select / EX_MeterCT?)
+    unique_id: raw_224_meter
+    register_type: holding
+    address: 224
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 225 (CT ratio?)
+    unique_id: raw_225_ct_ratio
+    register_type: holding
+    address: 225
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 228 (beep / AM-PM / auto dim?)
+    unique_id: raw_228_display
+    register_type: holding
+    address: 228
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 315 (parallel / master-slave / modbus SN?)
+    unique_id: raw_315_parallel
+    register_type: holding
+    address: 315
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
+  - name: Raw 341 (MPPT scan?)
+    unique_id: raw_341_mppt_scan
+    register_type: holding
+    address: 341
+    count: 1
+    entity_category: diagnostic
+    enabled_default: false
+
 controls:
 
   # ------------------------------------------------------------- on/off & modes
@@ -1835,7 +1904,7 @@ controls:
     group: Advanced Function
     register_type: holding
     address: 178
-    bit: 4
+    bit: 8
     icon: mdi:transmission-tower
     entity_category: config
 
@@ -1859,7 +1928,7 @@ controls:
     group: Advanced Function
     register_type: holding
     address: 178
-    bit: 2
+    bit: 4
     read_unique_id: rb_grid_peak_shaving_enable
     icon: mdi:engine
     entity_category: config
@@ -1925,3 +1994,113 @@ controls:
         value: 4
       - label: 'LN:100VAC LL:173VAC'
         value: 5
+
+  # ============================ from the Deye Modbus RTU protocol (V117) ======
+  # That document is the single-phase edition; the three-phase settings block
+  # sits 102 registers lower (doc 206 "ZeroExport power" = 104 here). The offset
+  # was verified against 26 registers whose meaning was already known.
+
+  - type: switch
+    name: Activate Battery
+    unique_id: activate_battery
+    group: Battery Setting
+    register_type: holding
+    address: 112
+    on_value: 0
+    off_value: 1
+    icon: mdi:battery-heart
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Generator Force On
+    unique_id: gen_force
+    group: Battery Setting
+    register_type: holding
+    address: 132
+    on_value: 1
+    off_value: 0
+    icon: mdi:engine-outline
+    entity_category: config
+    enabled_default: false
+
+  - type: number
+    name: Generator Minimum Solar Power
+    unique_id: gen_min_solar_power
+    group: Battery Setting
+    register_type: holding
+    address: 139
+    min: 0
+    max: 8000
+    step: 100
+    unit_of_measurement: W
+    mode: box
+    write_factor: 1
+    entity_category: config
+    enabled_default: false
+
+  - type: number
+    name: SmartLoad Open Delay
+    unique_id: smartload_open_delay
+    group: SmartLoad Setting
+    register_type: holding
+    address: 192
+    min: 1
+    max: 120
+    step: 1
+    unit_of_measurement: min
+    mode: box
+    write_factor: 1
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Generator Connected to Grid Input
+    unique_id: gen_on_grid_input
+    group: SmartLoad Setting
+    register_type: holding
+    address: 189
+    on_value: 1
+    off_value: 0
+    icon: mdi:transmission-tower-import
+    entity_category: config
+    enabled_default: false
+
+  - type: select
+    name: ARC Fault Detection
+    unique_id: arc_setup
+    group: Advanced Function
+    register_type: holding
+    address: 181
+    icon: mdi:flash-alert
+    entity_category: config
+    enabled_default: false
+    options:
+      - label: 'OFF'
+        value: 0
+      - label: 'ON'
+        value: 1
+
+  - type: switch
+    name: DRM Enable
+    unique_id: drm_enable
+    group: Advanced Function
+    register_type: holding
+    address: 178
+    bit: 15
+    read_unique_id: rb_grid_peak_shaving_enable
+    icon: mdi:radio-tower
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: On Grid Always On
+    unique_id: on_grid_always_on
+    group: Advanced Function
+    register_type: holding
+    address: 178
+    bit: 12
+    read_unique_id: rb_grid_peak_shaving_enable
+    icon: mdi:transmission-tower
+    entity_category: config
+    enabled_default: false

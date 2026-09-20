@@ -1,5 +1,21 @@
 # Changelog (personal fork)
 
+## 0.1.6
+- Cross-checked every control against the Deye Modbus RTU protocol (V117). That document
+  is the single-phase edition; the three-phase settings block sits **102 registers lower**
+  (doc 206 "ZeroExport power" = 104 here). Offset verified on 26 known registers.
+- Confirmed correct: zero export power (104), work mode (142), max sell power (143),
+  solar sell (145), time of use (146), TOU blocks (148-177), grid voltage/frequency
+  protection (185-188), peak-shaving power (190/191), lithium/BMS type (223).
+- Changed: register 178 is a nibble field - generator peak-shaving is bit 4 and grid
+  peak-shaving bit 8 (was bit 2 / bit 4 from a community map).
+- New: Activate Battery (112, inverted logic), Generator Force On (132), Generator minimum
+  solar power (139), ARC fault detection (181), generator connected to grid input (189),
+  SmartLoad open delay (192), DRM (178 bit 15), on-grid always on (178 bit 12).
+- New diagnostic sensors (read-only, disabled by default) for registers whose mapping is
+  still unproven: 140, 178, 209, 224, 225, 228, 315, 341. Enable them and compare against
+  Deye Cloud before making them writable.
+
 ## 0.1.5
 - Entity ranges taken from the inverter's own "Export All Configurations" (SN 2512153227):
   max solar power 400-19200 W, max sell power 0-24000 W, zero export power 0-500 W,
