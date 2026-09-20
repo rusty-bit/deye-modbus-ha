@@ -7,14 +7,20 @@
 - Confirmed correct: zero export power (104), work mode (142), max sell power (143),
   solar sell (145), time of use (146), TOU blocks (148-177), grid voltage/frequency
   protection (185-188), peak-shaving power (190/191), lithium/BMS type (223).
-- Changed: register 178 is a nibble field - generator peak-shaving is bit 4 and grid
-  peak-shaving bit 8 (was bit 2 / bit 4 from a community map).
+- Changed: register 178 holds 2-bit fields (10 = disable, 11 = enable), so each switch
+  writes the whole pair: generator peak-shaving bits 2-3, grid peak-shaving 4-5, on-grid
+  always on 6-7, DRM 12-13. Verified by reading this inverter: 178 = 0x2ABA, a valid code
+  in every pair. (An earlier draft read them as single bits 4/8/12/15, which would have
+  written the neighbouring external-relay and grounding-fault fields instead.)
 - New: Activate Battery (112, inverted logic), Generator Force On (132), Generator minimum
   solar power (139), ARC fault detection (181), generator connected to grid input (189),
-  SmartLoad open delay (192), DRM (178 bit 15), on-grid always on (178 bit 12).
+  SmartLoad open delay (192), DRM (178 bits 12-13), on-grid always on (178 bits 6-7).
 - New diagnostic sensors (read-only, disabled by default) for registers whose mapping is
-  still unproven: 140, 178, 209, 224, 225, 228, 315, 341. Enable them and compare against
-  Deye Cloud before making them writable.
+  still unproven: 140, 178, 209, 224, 228, 341.
+- Confirmed by a read-only probe of this inverter: 336 holds parallel / master-slave /
+  Modbus SN (0x0400 = parallel off, slave, SN 1) and 347 the CT ratio (2000), so the
+  guesses at 225 and 315 are dropped. 345 reads 0 while Deye Cloud shows "Eastron", so
+  Meter Select stays unconfirmed.
 
 ## 0.1.5
 - Entity ranges taken from the inverter's own "Export All Configurations" (SN 2512153227):
