@@ -1,5 +1,14 @@
 # Changelog (personal fork)
 
+## 0.1.5
+- Entity ranges taken from the inverter's own "Export All Configurations" (SN 2512153227):
+  max solar power 400-19200 W, max sell power 0-24000 W, zero export power 0-500 W,
+  battery charge/discharge and grid charge current 0-240 A, battery capacity 0-20000 Ah,
+  batt low 10-100 %, batt restart 20-100 %, lithium mode 0-20, grid reconnection 1-900 s,
+  grid peak-shaving 1000-65000 W, generator peak-shaving 500-16000 W, grid voltage 80-300 V.
+- Confirms the registers are unscaled (1 W per step) on this model.
+- New: Grid Level select (138).
+
 ## 0.1.4
 - New: **Zero Export Power** (reg 104), **Energy Pattern** (141) and **Time of Use / active days** (146).
 - New Battery Setting entities: battery control mode (98), operation mode (111), lithium/BMS

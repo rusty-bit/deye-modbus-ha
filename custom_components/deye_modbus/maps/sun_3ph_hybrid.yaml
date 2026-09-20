@@ -954,8 +954,8 @@ controls:
     group: System Work Mode
     register_type: holding
     address: 340
-    min: 0
-    max: 32000
+    min: 400
+    max: 19200
     step: 100
     unit_of_measurement: W
     mode: box
@@ -969,7 +969,7 @@ controls:
     register_type: holding
     address: 143
     min: 0
-    max: 16000
+    max: 24000
     step: 100
     unit_of_measurement: W
     mode: box
@@ -999,7 +999,7 @@ controls:
     register_type: holding
     address: 108
     min: 0
-    max: 185
+    max: 240
     step: 1
     unit_of_measurement: A
     mode: box
@@ -1013,7 +1013,7 @@ controls:
     register_type: holding
     address: 109
     min: 0
-    max: 185
+    max: 240
     step: 1
     unit_of_measurement: A
     mode: box
@@ -1027,7 +1027,7 @@ controls:
     register_type: holding
     address: 102
     min: 0
-    max: 2000
+    max: 20000
     step: 1
     unit_of_measurement: Ah
     mode: box
@@ -1055,7 +1055,7 @@ controls:
     group: Battery Setting
     register_type: holding
     address: 116
-    min: 0
+    min: 20
     max: 100
     step: 1
     unit_of_measurement: '%'
@@ -1069,7 +1069,7 @@ controls:
     group: Battery Setting
     register_type: holding
     address: 117
-    min: 0
+    min: 10
     max: 100
     step: 1
     unit_of_measurement: '%'
@@ -1084,7 +1084,7 @@ controls:
     register_type: holding
     address: 128
     min: 0
-    max: 185
+    max: 240
     step: 1
     unit_of_measurement: A
     mode: box
@@ -1098,8 +1098,8 @@ controls:
     group: Grid Setting
     register_type: holding
     address: 185
-    min: 180
-    max: 270
+    min: 80
+    max: 300
     step: 0.1
     unit_of_measurement: V
     mode: box
@@ -1113,8 +1113,8 @@ controls:
     group: Grid Setting
     register_type: holding
     address: 186
-    min: 180
-    max: 270
+    min: 80
+    max: 300
     step: 0.1
     unit_of_measurement: V
     mode: box
@@ -1513,7 +1513,7 @@ controls:
     register_type: holding
     address: 104
     min: 0
-    max: 1000
+    max: 500
     step: 1
     unit_of_measurement: W
     mode: box
@@ -1607,7 +1607,7 @@ controls:
     register_type: holding
     address: 223
     min: 0
-    max: 50
+    max: 20
     step: 1
     mode: box
     write_factor: 1
@@ -1742,7 +1742,7 @@ controls:
     register_type: holding
     address: 180
     min: 1
-    max: 300
+    max: 900
     step: 1
     unit_of_measurement: s
     mode: box
@@ -1845,8 +1845,8 @@ controls:
     group: Advanced Function
     register_type: holding
     address: 191
-    min: 0
-    max: 80000
+    min: 1000
+    max: 65000
     step: 100
     unit_of_measurement: W
     mode: box
@@ -1871,8 +1871,8 @@ controls:
     group: Advanced Function
     register_type: holding
     address: 190
-    min: 0
-    max: 22000
+    min: 500
+    max: 16000
     step: 100
     unit_of_measurement: W
     mode: box
@@ -1902,3 +1902,26 @@ controls:
     icon: mdi:solar-panel
     entity_category: config
     enabled_default: false
+
+  - type: select
+    name: Grid Level
+    unique_id: grid_level
+    group: Grid Setting
+    register_type: holding
+    address: 138
+    icon: mdi:flash-triangle
+    entity_category: config
+    enabled_default: false
+    options:
+      - label: 'LN:220VAC LL:380VAC'
+        value: 0
+      - label: 'LN:230VAC LL:400VAC'
+        value: 1
+      - label: 'LN:240VAC LL:415VAC'
+        value: 2
+      - label: 'LN:120VAC LL:208VAC'
+        value: 3
+      - label: 'LN:133VAC LL:230VAC'
+        value: 4
+      - label: 'LN:100VAC LL:173VAC'
+        value: 5
