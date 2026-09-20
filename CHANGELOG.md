@@ -1,6 +1,25 @@
 # Changelog (personal fork)
 
 ## 0.1.4
+- New: **Zero Export Power** (reg 104), **Energy Pattern** (141) and **Time of Use / active days** (146).
+- New Battery Setting entities: battery control mode (98), operation mode (111), lithium/BMS
+  protocol (223), battery resistance (113), charging efficiency (114), grid-charge start SOC (127),
+  generator charge start SOC (124) and current (125), generator max run (121) and down time (122).
+- New Grid setting entities: grid frequency (183), reconnection time (180), frequency
+  high/low protection (187/188).
+- New SmartLoad entities: IO mode (133), SmartLoad on/off SOC (137/135).
+- New Advanced Function entities: grid and generator peak-shaving switches (bits of 178) and
+  their power limits (191/190), asymmetric phase feeding (237), MPPT multi-point scan (341).
+- Fix: **register 340 was labelled "Max Sell Power" and 143 "Max Grid Output Power"** - they are
+  Max Solar Power (340) and Max Sell Power (143). Renamed; `max_grid_output_power` is now
+  `max_sell_power_143`.
+- Fix: number read-back ignored the write scaling, so Active Power Regulation and the grid
+  voltage limits read 10x too high. Read factor now defaults to 1/write_factor.
+- New: switches support `bit:`/`mask:` for settings that share one register (178, 341),
+  read-modify-write so neighbouring bits are preserved.
+- New: controls are grouped into sub-devices mirroring the Deye Cloud batch-command pages
+  (Battery Setting, System Work Mode, Grid Setting, SmartLoad Setting, Advanced Function,
+  Time of Use, Basic Setting).
 - New: advanced settings from the SolarMAN app (SmartLoad Setting / Advanced Function-1).
   - Writable: SmartLoad Setup (133), GEN Connect To Grid Input (189), ARC Fault
     Detection (181), Gen/Grid Peak Shaving on/off (178 bit fields) and power (190/191),

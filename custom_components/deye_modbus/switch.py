@@ -39,14 +39,16 @@ class DeyeModbusSwitch(CoordinatorEntity[dict[str, Any]], SwitchEntity):
         self._address = int(cfg["address"])
         self._on = int(cfg.get("on_value", 1))
         self._off = int(cfg.get("off_value", 0))
-        # Optional bit field: on/off values are field values, written in place.
-        self._mask = parse_mask(cfg.get("mask"))
+        # Some Deye settings share one register as a bit field (e.g. 178 holds
+        # the peak-shaving and generator flags). `bit:` names a single bit,
+        # `mask:` a wider field; on/off are then field values written in place.
+        self._mask = (1 << int(cfg["bit"])) if "bit" in cfg else parse_mask(cfg.get("mask"))
         self._shift = mask_shift(self._mask) if self._mask else 0
         self._state: Optional[bool] = None
         self._attr_name = cfg.get("name")
         uid = cfg.get("unique_id") or f"switch_{self._address}"
         self._attr_unique_id = f"{entry.entry_id}_{uid}"
-        self._attr_device_info = build_device_info(entry)
+        self._attr_device_info = build_device_info(entry, cfg.get("group"))
         self._attr_entity_registry_enabled_default = bool(cfg.get("enabled_default", True))
         if cfg.get("icon"):
             self._attr_icon = cfg["icon"]

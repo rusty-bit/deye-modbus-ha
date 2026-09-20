@@ -73,7 +73,8 @@ def _auto_inject_readbacks(sensors: list[dict], controls: list[dict]) -> tuple[l
                 })
                 sensor_uids.add(rb_uid)
             c["read_unique_id"] = rb_uid
-            c.setdefault("read_factor", 1.0)
+            if c.get("type") == "switch":
+                c.setdefault("read_factor", 1.0)
     return sensors, controls
 
 

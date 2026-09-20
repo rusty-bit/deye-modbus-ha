@@ -67,6 +67,11 @@ async def main():
     print("after refresh rb:",c.data["rb_batt_max_charge_current"],c.data["rb_batt_low_soc"])
     # FC06 directly, to prove emulation rejects it
     cl=await c._ensure_client(); rr=await cl.write_register(108,50,device_id=1); print("raw FC06 isError:",rr.isError())
+    # every control must have a read-back that the poll actually fills
+    missing=[ct['name'] for ct in controls if c.data.get(ct.get('read_unique_id')) is None]
+    print("controls:",len(controls),"| groups:",sorted({ct.get('group') for ct in controls}))
+    print("controls without a read-back value:",missing or "none")
+    print("zero export rb:",c.data.get('rb_zero_export_power'),"| reg178 rb:",c.data.get('rb_grid_peak_shaving_enable'))
     # advanced settings decode (bit fields shifted down)
     adv={k:d[k] for k in ("adv_parallel","adv_equipment_mode","adv_modbus_sn","adv_drm","adv_mppt_scan","adv_meter_select","adv_ct_ratio")}
     print("advanced:",adv)
@@ -76,7 +81,7 @@ async def main():
     r=await cl.read_holding_registers(178,count=1,device_id=1)
     print("bit write ok:",ok,"| 178 now 0x%04X" % r.registers[0])
     assert ok and r.registers[0]==0x20BA, hex(r.registers[0])
-    assert c.data["adv_drm"]==2 and (int(c.data["rb_grid_peak_shaving"]) & 0x30)>>4==3
+    assert c.data["adv_drm"]==2 and (int(c.data["rb_grid_peak_shaving_enable"]) & 0x30)>>4==3
     # then gen peak-shaving: grid flag must survive
     ok=await c.write_register_bits(178,0x000C,3<<2)
     r=await cl.read_holding_registers(178,count=1,device_id=1)

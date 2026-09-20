@@ -44,7 +44,7 @@ class DeyeModbusNumber(CoordinatorEntity[dict[str, Any]], NumberEntity):
         self._attr_name = cfg.get("name")
         uid = cfg.get("unique_id") or f"number_{self._address}"
         self._attr_unique_id = f"{entry.entry_id}_{uid}"
-        self._attr_device_info = build_device_info(entry)
+        self._attr_device_info = build_device_info(entry, cfg.get("group"))
         self._attr_native_min_value = float(cfg.get("min", 0))
         self._attr_native_max_value = float(cfg.get("max", 100))
         self._attr_native_step = float(cfg.get("step", 1))
@@ -62,7 +62,10 @@ class DeyeModbusNumber(CoordinatorEntity[dict[str, Any]], NumberEntity):
         self._write_factor = float(cfg.get("write_factor", 1.0))
         self._signed = bool(cfg.get("signed", False))
         self._read_uid: Optional[str] = cfg.get("read_unique_id")
-        self._read_factor = float(cfg.get("read_factor", 1.0))
+        # Read-back is the inverse of the write scaling unless stated otherwise:
+        # register 185 holds 2530 for 253.0 V (write_factor 10).
+        default_read = (1.0 / self._write_factor) if self._write_factor else 1.0
+        self._read_factor = float(cfg.get("read_factor", default_read))
         self._value: float | None = None
         self._sync_from_sensor()
 
@@ -118,7 +121,7 @@ class DeyeModbusNumber32(CoordinatorEntity[dict[str, Any]], NumberEntity):
         self._attr_name = cfg.get("name")
         uid = cfg.get("unique_id") or f"number32_{self._base}"
         self._attr_unique_id = f"{entry.entry_id}_{uid}"
-        self._attr_device_info = build_device_info(entry)
+        self._attr_device_info = build_device_info(entry, cfg.get("group"))
         self._attr_native_min_value = float(cfg.get("min", 0))
         self._attr_native_max_value = float(cfg.get("max", 4294967295))
         self._attr_native_step = float(cfg.get("step", 1))

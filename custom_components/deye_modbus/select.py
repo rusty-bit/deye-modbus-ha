@@ -60,7 +60,7 @@ class DeyeModbusSelect(CoordinatorEntity[dict[str, Any]], SelectEntity):
         self._attr_name = cfg.get("name")
         uid = cfg.get("unique_id") or f"select_{self._address}"
         self._attr_unique_id = f"{entry.entry_id}_{uid}"
-        self._attr_device_info = build_device_info(entry)
+        self._attr_device_info = build_device_info(entry, cfg.get("group"))
         self._attr_options = self._labels
         self._attr_entity_registry_enabled_default = bool(cfg.get("enabled_default", True))
         if cfg.get("icon"):
@@ -127,7 +127,7 @@ class DeyeModbusSelect32(CoordinatorEntity[dict[str, Any]], SelectEntity):
         self._attr_name = cfg.get("name")
         uid = cfg.get("unique_id") or f"select32_{self._base}"
         self._attr_unique_id = f"{entry.entry_id}_{uid}"
-        self._attr_device_info = build_device_info(entry)
+        self._attr_device_info = build_device_info(entry, cfg.get("group"))
         self._attr_options = self._labels
         self._attr_entity_registry_enabled_default = bool(cfg.get("enabled_default", True))
         if cfg.get("icon"):
