@@ -1094,8 +1094,11 @@ controls:
     entity_category: config
     enabled_default: false
 
+  # The names follow the protocol: 115 is the cutoff, 117 only the warning
+  # level. Neither is the discharge floor while Time of Use is enabled (146
+  # bit 0) - the floor is then the active slot's TOU SOC (166-171).
   - type: number
-    name: Battery Shutdown SOC
+    name: Battery Shutdown SOC (cutoff)
     unique_id: batt_shutdown_soc
     group: Battery Setting
     register_type: holding
@@ -1123,7 +1126,7 @@ controls:
     entity_category: config
 
   - type: number
-    name: Battery Low SOC
+    name: Battery Low SOC (warning)
     unique_id: batt_low_soc
     group: Battery Setting
     register_type: holding

@@ -1,5 +1,14 @@
 # Changelog (personal fork)
 
+## 0.1.7
+- Change: "Battery Shutdown SOC" and "Battery Low SOC" are now named
+  "Battery Shutdown SOC (cutoff)" (register 115) and "Battery Low SOC (warning)"
+  (117), matching the protocol. Entity IDs are unchanged.
+  Neither is the discharge floor while Time of Use is on: the inverter then stops
+  at the active slot's TOU SOC (166-171). Confirmed on a live inverter, where 117
+  held the requested 20 % while all six TOU slots held 30 % and discharge stopped
+  at 30 %.
+
 ## 0.1.6
 - Cross-checked every control against the Deye Modbus RTU protocol (V117). That document
   is the single-phase edition; the three-phase settings block sits **102 registers lower**

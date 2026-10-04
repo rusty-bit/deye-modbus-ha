@@ -133,6 +133,8 @@ Rebadged units on the same platform (Sunsynk, etc.) will generally work too.
 |------|----------|
 | Switch | Inverter On/Off, Solar Sell (Export), Grid Charge Enable, Generator Charge Enable |
 | Select | Work Mode (Selling First / Zero Export To Load / Zero Export To CT) |
+> **SOC settings.** While Time of Use is enabled (register 146), the inverter discharges only to the active slot's **TOU SOC**, not to *Battery Low SOC (warning)* — that one is the warning level, and *Battery Shutdown SOC (cutoff)* is the real cutoff. The TOU SOC entities ship disabled; enable them to change the floor.
+
 | Number | Max Sell Power, Max Grid Output Power, Active Power Regulation, Battery Max Charge/Discharge Current, Grid Charge Current, Battery Shutdown/Restart/Low SOC, Battery Capacity, Grid Voltage High/Low limits |
 | Time-of-use | 6 slots × Time / Power / SOC / Charge Source (Off / Grid / Generator / Grid+Generator) |
 | Advanced (fork) | SmartLoad Setup, GEN Connect To Grid Input, ARC Fault Detection, Gen/Grid Peak Shaving + power, Asymmetric Phase Feeding |
