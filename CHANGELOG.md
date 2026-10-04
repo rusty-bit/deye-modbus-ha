@@ -1,5 +1,13 @@
 # Changelog (personal fork)
 
+## 0.1.8
+- Fix: Time of Use (register 146) is a bit map - bit 0 enables it, bits 1-7 are the
+  weekdays - not an enumeration. The old `Time of Use` select listed whole-register
+  values, so an inverter with TOU on and no day bits (146 = 1) matched nothing and the
+  entity stayed blank. It is replaced by a `Time of Use` switch plus one switch per day
+  (disabled by default); each writes only its own bit, leaving the others untouched.
+  The old `time_of_use_days` select is gone - delete the stale entity in Home Assistant.
+
 ## 0.1.7
 - Change: "Battery Shutdown SOC" and "Battery Low SOC" are now named
   "Battery Shutdown SOC (cutoff)" (register 115) and "Battery Low SOC (warning)"

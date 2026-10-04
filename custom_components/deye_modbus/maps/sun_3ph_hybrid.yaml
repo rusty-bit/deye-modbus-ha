@@ -1597,39 +1597,98 @@ controls:
       - label: Load First
         value: 1
 
-  - type: select
+  # Register 146 is a bit map, not an enumeration: bit 0 enables Time of Use and
+  # bits 1-7 are Monday..Sunday. A select over whole-register values cannot show
+  # combinations the list does not contain (an inverter with TOU on and no day
+  # bits reads 1 and left the entity blank), so each bit gets its own switch and
+  # the write is a read-modify-write that leaves the other bits alone.
+  - type: switch
     name: Time of Use
-    unique_id: time_of_use_days
+    unique_id: time_of_use_enable
     group: Time of Use
     register_type: holding
     address: 146
+    bit: 0
     icon: mdi:calendar-clock
     entity_category: config
-    options:
-      - label: Disabled
-        value: 0
-      - label: Every day
-        value: 255
-      - label: Weekdays
-        value: 63
-      - label: Weekend
-        value: 193
-      - label: Monday
-        value: 3
-      - label: Tuesday
-        value: 5
-      - label: Wednesday
-        value: 9
-      - label: Thursday
-        value: 17
-      - label: Friday
-        value: 33
-      - label: Saturday
-        value: 65
-      - label: Sunday
-        value: 129
 
-  # ------------------------------------------------------ Battery Setting page
+  - type: switch
+    name: Time of Use Monday
+    unique_id: tou_day_monday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 1
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Tuesday
+    unique_id: tou_day_tuesday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 2
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Wednesday
+    unique_id: tou_day_wednesday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 3
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Thursday
+    unique_id: tou_day_thursday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 4
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Friday
+    unique_id: tou_day_friday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 5
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Saturday
+    unique_id: tou_day_saturday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 6
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
+  - type: switch
+    name: Time of Use Sunday
+    unique_id: tou_day_sunday
+    group: Time of Use
+    register_type: holding
+    address: 146
+    bit: 7
+    icon: mdi:calendar
+    entity_category: config
+    enabled_default: false
+
   - type: select
     name: Battery Control Mode
     unique_id: batt_control_mode
